@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
+import { api } from '@/lib/api';
 import { Button, Input, Card } from '@/components/ui';
 import Link from 'next/link';
 
@@ -12,6 +13,13 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    api.getAuthConfig()
+      .then((config) => setRegistrationEnabled(config.registration_enabled))
+      .catch(() => setRegistrationEnabled(true)); // let the API decide; it returns 403 if disabled
+  }, []);
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const router = useRouter();
@@ -41,6 +49,22 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  if (registrationEnabled === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md text-center">
+          <h1 className="text-2xl font-bold mb-3">Sign-up is disabled</h1>
+          <p className="text-gray-600 mb-6">
+            This is a private ProposalCreator workspace. Ask your administrator to create an account for you.
+          </p>
+          <Link href="/login" className="text-primary-600 hover:underline font-medium">
+            Back to sign in
+          </Link>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

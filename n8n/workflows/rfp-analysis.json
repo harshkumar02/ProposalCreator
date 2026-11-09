@@ -1,0 +1,191 @@
+{
+  "id": "pcRfpAnalysis001",
+  "name": "ProposalCreator - RFP Analysis",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "rfp-analysis",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rfp-analysis",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pcWorkflowSecret",
+          "name": "ProposalCreator Workflow Secret"
+        }
+      }
+    },
+    {
+      "id": "report-running",
+      "name": "Report RUNNING",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook').item.json.body.callback_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'RUNNING', current_step: 'Starting clause extraction', n8n_execution_id: String($execution.id) }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pcWorkflowSecret",
+          "name": "ProposalCreator Workflow Secret"
+        }
+      }
+    },
+    {
+      "id": "extract",
+      "name": "Extract clauses",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook').item.json.body.api_base_url }}/internal/rfps/{{ $('Webhook').item.json.body.rfp_id }}/extract-clauses",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ run_id: $('Webhook').item.json.body.run_id, provider: ($('Webhook').item.json.body.params && $('Webhook').item.json.body.params.provider) || null }) }}",
+        "options": {
+          "timeout": 1500000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pcWorkflowSecret",
+          "name": "ProposalCreator Workflow Secret"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "report-completed",
+      "name": "Report COMPLETED",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        -100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook').item.json.body.callback_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'COMPLETED', current_step: 'done', result: $json }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pcWorkflowSecret",
+          "name": "ProposalCreator Workflow Secret"
+        }
+      }
+    },
+    {
+      "id": "report-failed",
+      "name": "Report FAILED",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook').item.json.body.callback_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'FAILED', current_step: 'Extract clauses', error: String(($json.error && ($json.error.message || $json.error.description)) || $json.message || 'Clause extraction failed') }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pcWorkflowSecret",
+          "name": "ProposalCreator Workflow Secret"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Report RUNNING",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report RUNNING": {
+      "main": [
+        [
+          {
+            "node": "Extract clauses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract clauses": {
+      "main": [
+        [
+          {
+            "node": "Report COMPLETED",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Report FAILED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

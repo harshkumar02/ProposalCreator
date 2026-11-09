@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Button, Card, Badge, Spinner, Textarea } from '@/components/ui';
+import ClauseAnalysis from '@/components/ClauseAnalysis';
 import { ArrowLeft, FileText, Sparkles, CheckCircle, Clock, AlertCircle, Edit, Trash2 } from 'lucide-react';
 
 interface ExtractionResult {
@@ -172,6 +173,8 @@ export default function RFPPage() {
             </Button>
           </div>
         </div>
+
+        <ClauseAnalysis rfpId={rfpId} hasContent={!!content} />
 
         {/* RFP Content */}
         <Card className="mb-8">

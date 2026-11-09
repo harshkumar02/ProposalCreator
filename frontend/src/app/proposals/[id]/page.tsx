@@ -31,15 +31,16 @@ const EDITABLE_SECTIONS = {
   '1. Proposal Overview': {
     '1.1 Overview': ['proposal_overview'],
   },
-  '2. Current Challenges': {
-    '2.1 Client Challenges': ['current_challenges', 'challenges'],
+  '2. Current Environment': {
+    '2.1 Environment': ['current_environment', 'current_challenges'],
   },
   '3. Objectives': {
     '3.1 Project Objectives': ['objectives'],
   },
   '4. Scope of Work': {
-    '4.1 Assets in Scope': ['assets'],
-    '4.2 Key Services': ['key_services'],
+    '4.1 Assessment & Design': ['assessment'],
+    '4.2 Implementation': ['implementation'],
+    '4.3 Key Services': ['key_services', 'scope_of_work'],
   },
   '5. Solution Proposed': {
     '5.1 Our Solution': ['solution_proposed'],
@@ -51,14 +52,20 @@ const EDITABLE_SECTIONS = {
   '8. Assumptions': {
     '8.1 Terms & Assumptions': ['assumptions'],
   },
-  '9. Implementation Timeline': {
-    '9.1 Project Timeline': ['timeline', 'implementation_timeline'],
+  '9. Dependencies': {
+    '9.1 Dependencies': ['dependencies'],
   },
-  '10. Expected Outcomes & ROI': {
-    '10.1 Outcomes': ['expected_outcomes', 'roi'],
+  '10. Implementation Timeline': {
+    '10.1 Project Timeline': ['timeline', 'implementation_timeline'],
   },
-  '12. Conclusion': {
-    '12.1 Closing Statement': ['conclusion'],
+  '11. Expected Outcomes & ROI': {
+    '11.1 Outcomes': ['expected_outcomes', 'roi'],
+  },
+  '13. Risk & Mitigations': {
+    '13.1 Risk Assessment': ['risk_mitigations'],
+  },
+  '14. Conclusion': {
+    '14.1 Closing Statement': ['conclusion'],
   },
 };
 
@@ -80,15 +87,17 @@ export default function ProposalPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     '1. Proposal Overview': true,
-    '2. Current Challenges': true,
+    '2. Current Environment': true,
     '3. Objectives': true,
     '4. Scope of Work': true,
     '5. Solution Proposed': true,
     '6. Implementation Plan': true,
     '8. Assumptions': true,
-    '9. Implementation Timeline': true,
-    '10. Expected Outcomes & ROI': true,
-    '12. Conclusion': true,
+    '9. Dependencies': true,
+    '10. Implementation Timeline': true,
+    '11. Expected Outcomes & ROI': true,
+    '13. Risk & Mitigations': true,
+    '14. Conclusion': true,
   });
 
   useEffect(() => {
@@ -215,14 +224,6 @@ export default function ProposalPage() {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const getFieldValues = (fieldNames: string[]): Record<string, string> => {
-    const values: Record<string, string> = {};
-    fieldNames.forEach(name => {
-      values[name] = editedData[name] || '';
-    });
-    return values;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -283,7 +284,7 @@ export default function ProposalPage() {
             <div>
               <h3 className="font-semibold text-blue-900">Pre-filled Content</h3>
               <p className="text-sm text-blue-700">
-                Sections 1.1 (About 63SATS), 7 (RACI Matrix), and 11 (Why 63SATS) contain fixed content that appears automatically in all proposals. Edit the sections below to customize your proposal.
+                Sections 1.1 (About 63SATS), 7 (RACI Matrix), 12 (Why 63SATS), and 14 (Conclusion) contain fixed content that appears automatically in all proposals. Edit the sections below to customize your proposal.
               </p>
             </div>
           </div>
