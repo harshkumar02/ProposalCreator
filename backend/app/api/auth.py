@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jose import JWTError
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token
 from app.models.models import User
@@ -32,8 +33,19 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 
+@router.get("/config")
+def auth_config():
+    """Public auth settings the login/register pages need before sign-in."""
+    return {"registration_enabled": settings.ALLOW_REGISTRATION}
+
+
 @router.post("/register", response_model=TokenResponse)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    if not settings.ALLOW_REGISTRATION:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Self-registration is disabled. Ask your administrator for an account.",
+        )
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(

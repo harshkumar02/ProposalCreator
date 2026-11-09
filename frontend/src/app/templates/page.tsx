@@ -21,6 +21,130 @@ interface TemplateDetail {
   created_at: string;
 }
 
+const SAMPLE_TEMPLATE = `CYBERSECURITY SERVICES PROPOSAL
+
+Prepared for: {{client_name}}
+Project: {{project_title}}
+
+================================================================================
+1. INTRODUCTION
+================================================================================
+
+1.1 About 63SATS
+63SATS is a leading Cybersecurity SI/MSSP provider specializing in comprehensive security solutions. We help organizations protect their digital assets through cutting-edge technology, expert analysis, and proactive threat management.
+
+With a focus on innovation and customer success, 63SATS provides end-to-end cybersecurity services including 24/7 SOC monitoring, Incident Response, Compliance Management, and more.
+
+1.2 Proposal Overview
+This proposal is submitted by 63SATS in response to the Request for Proposal (RFP) from {{client_name}}.
+
+================================================================================
+2. CURRENT CHALLENGES
+================================================================================
+
+{{current_challenges}}
+
+================================================================================
+3. OBJECTIVES
+================================================================================
+
+{{objectives}}
+
+================================================================================
+4. SCOPE OF WORK
+================================================================================
+
+4.1 Assets
+{{assets}}
+
+4.2 Key Services to be Delivered
+{{key_services}}
+
+================================================================================
+5. SOLUTION PROPOSED
+================================================================================
+
+{{solution_proposed}}
+
+================================================================================
+6. IMPLEMENTATION PLAN
+================================================================================
+
+6.1 Implementation Approach
+{{implementation_approach}}
+
+6.2 Implementation Methodology
+{{implementation_methodology}}
+
+================================================================================
+7. RACI MATRIX
+================================================================================
+
+The following RACI matrix defines responsibilities during the implementation and ongoing operations phases:
+
+Activity                    | 63SATS      | Client
+---------------------------|-------------|------------
+Discovery & Assessment      | R           | A
+Platform Deployment        | R           | A
+Agent Installation          | C           | R/A
+24/7 Monitoring             | R           | I
+Incident Response           | R           | A
+Weekly Reporting            | R           | I
+
+R = Responsible | A = Accountable | C = Consulted | I = Informed
+
+================================================================================
+8. ASSUMPTIONS
+================================================================================
+
+{{assumptions}}
+
+================================================================================
+9. IMPLEMENTATION TIMELINE
+================================================================================
+
+{{timeline}}
+
+================================================================================
+10. EXPECTED OUTCOMES AND ROI
+================================================================================
+
+{{expected_outcomes}}
+
+================================================================================
+11. WHY 63SATS
+================================================================================
+
+63SATS is the right partner for this engagement because:
+
+1. Expertise
+   * Team of certified cybersecurity professionals (CISSP, CISM, CEH, OSCP)
+   * Extensive experience with enterprise security implementations
+
+2. Customer Focus
+   * Dedicated account management
+   * Customized service delivery
+   * Proven track record
+
+3. Value Proposition
+   * Competitive and transparent pricing
+   * No hidden fees
+   * Measurable outcomes and ROI
+
+================================================================================
+12. CONCLUSION
+================================================================================
+
+In today's rapidly evolving threat landscape, organizations need a trusted partner. 63SATS offers a comprehensive solution that addresses your security needs.
+
+We look forward to the opportunity to partner with {{client_name}} and demonstrate our commitment to your success.
+
+Thank you for considering 63SATS as your cybersecurity partner.
+
+================================================================================
+PROPOSAL PREPARED BY 63SATS
+================================================================================`;
+
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,6 +270,17 @@ export default function TemplatesPage() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Proposal Templates</h1>
           <div className="flex gap-4">
+            <Button onClick={() => {
+              setNewTemplate({
+                name: '63SATS Standard Proposal',
+                content: SAMPLE_TEMPLATE,
+                is_default: true
+              });
+              setShowCreateForm(true);
+            }} variant="secondary">
+              <FileText className="w-4 h-4 mr-2" />
+              Create 63SATS Template
+            </Button>
             <label className="cursor-pointer inline-flex items-center justify-center font-medium rounded-lg transition-colors bg-gray-200 text-gray-800 px-4 py-2 hover:bg-gray-300">
               <input type="file" className="hidden" accept=".docx,.doc,.txt" onChange={handleFileUpload} />
               <Upload className="w-4 h-4 mr-2" />

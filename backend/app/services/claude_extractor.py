@@ -1,7 +1,14 @@
 import anthropic
 from app.core.config import settings
 
-client = anthropic.Anthropic()
+# The key must be passed explicitly: pydantic-settings loads .env into
+# `settings`, not into os.environ, so a bare Anthropic() finds no credential and
+# every call fails with a TypeError that the callers below swallow.
+client = (
+    anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    if settings.ANTHROPIC_API_KEY
+    else None
+)
 
 
 def extract_with_claude(content: str) -> list[dict]:

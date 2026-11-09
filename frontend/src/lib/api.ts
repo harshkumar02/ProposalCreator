@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Empty string = same origin (production behind deploy/Caddyfile); unset = local dev backend.
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 type TokenPair = {
   access_token: string;
@@ -7,6 +8,12 @@ type TokenPair = {
 
 export const api = {
   // Auth
+  getAuthConfig: async (): Promise<{ registration_enabled: boolean }> => {
+    const res = await fetch(`${API_URL}/api/auth/config`);
+    if (!res.ok) throw new Error('Failed to load auth settings');
+    return res.json();
+  },
+
   register: async (email: string, password: string, name?: string) => {
     const res = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
@@ -334,6 +341,90 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('No default template');
+    return res.json();
+  },
+
+  // Tender clauses (produced by the rfp-analysis workflow)
+  getClauses: async (rfpId: number, category?: string) => {
+    const token = localStorage.getItem('access_token');
+    const query = category ? `?category=${encodeURIComponent(category)}` : '';
+    const res = await fetch(`${API_URL}/api/rfps/${rfpId}/clauses${query}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch clauses');
+    return res.json();
+  },
+
+  updateClause: async (rfpId: number, clauseId: number, data: Record<string, any>) => {
+    const token = localStorage.getItem('access_token');
+    const res = await fetch(`${API_URL}/api/rfps/${rfpId}/clauses/${clauseId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.detail || 'Failed to update clause');
+    }
+    return res.json();
+  },
+
+  createClause: async (rfpId: number, data: Record<string, any>) => {
+    const token = localStorage.getItem('access_token');
+    const res = await fetch(`${API_URL}/api/rfps/${rfpId}/clauses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.detail || 'Failed to add clause');
+    }
+    return res.json();
+  },
+
+  // Workflows (n8n orchestration; poll getWorkflowRun until COMPLETED/FAILED)
+  startWorkflow: async (data: { workflow: string; rfp_id?: number; proposal_id?: number; params?: Record<string, any> }) => {
+    const token = localStorage.getItem('access_token');
+    const res = await fetch(`${API_URL}/api/workflows/runs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.detail || 'Failed to start workflow');
+    }
+    return res.json();
+  },
+
+  getWorkflowRun: async (runId: number) => {
+    const token = localStorage.getItem('access_token');
+    const res = await fetch(`${API_URL}/api/workflows/runs/${runId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch workflow run');
+    return res.json();
+  },
+
+  listWorkflowRuns: async (filters: { rfp_id?: number; proposal_id?: number } = {}) => {
+    const token = localStorage.getItem('access_token');
+    const params = new URLSearchParams();
+    if (filters.rfp_id !== undefined) params.set('rfp_id', String(filters.rfp_id));
+    if (filters.proposal_id !== undefined) params.set('proposal_id', String(filters.proposal_id));
+    const res = await fetch(`${API_URL}/api/workflows/runs?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch workflow runs');
     return res.json();
   },
 

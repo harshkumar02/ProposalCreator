@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 import fitz
 import mammoth
@@ -16,9 +16,12 @@ router = APIRouter()
 def extract_text_from_pdf(file_content: bytes) -> str:
     try:
         doc = fitz.open(stream=file_content, filetype="pdf")
-        text = ""
-        for page in doc:
-            text += page.get_text()
+        # Page markers let clause extraction cite the page each requirement is on
+        # (see services/clause_extractor.split_pages).
+        text = "".join(
+            f"--- Page {number} ---\n{page.get_text()}\n"
+            for number, page in enumerate(doc, start=1)
+        )
         doc.close()
         return text
     except Exception as e:
@@ -36,7 +39,7 @@ def extract_text_from_docx(file_content: bytes) -> str:
 @router.post("/upload", response_model=RFPResponse)
 async def upload_rfp(
     file: Optional[UploadFile] = File(None),
-    content: Optional[str] = None,
+    content: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

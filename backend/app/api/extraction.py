@@ -26,6 +26,16 @@ def extract_rfp(
     if not rfp.content:
         raise HTTPException(status_code=400, detail="RFP has no content to extract")
 
+    return run_extraction(db, rfp, engines)
+
+
+def run_extraction(db: Session, rfp: RFP, engines: List[str]) -> ExtractionResultsResponse:
+    """Replace the RFP's extraction results with a fresh run of ``engines``.
+
+    Shared by the user-facing route above and the n8n internal route.
+    """
+    rfp_id = rfp.id
+
     all_results = []
     used_engines = []
 

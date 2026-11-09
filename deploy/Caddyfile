@@ -1,0 +1,39 @@
+# One origin for the whole app: the browser talks only to Caddy.
+# TLS is terminated in front of this (tailscale serve / Cloudflare Tunnel),
+# so Caddy itself listens on plain HTTP inside the compose network.
+{
+	admin off
+}
+
+:80 {
+	encode gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy same-origin
+		-Server
+	}
+
+	request_body {
+		max_size 50MB
+	}
+
+	# n8n-only callbacks authenticate with a shared secret and must never be
+	# reachable from outside the compose network.
+	handle /internal/* {
+		respond "Not found" 404
+	}
+
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	handle /health {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+}

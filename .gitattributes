@@ -1,0 +1,9 @@
+# Files executed inside Linux containers must keep LF endings, even when the
+# repo is checked out on Windows (core.autocrlf=true would otherwise add CRLF
+# and break `/bin/sh deploy/n8n-init.sh`).
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+Caddyfile       text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+.dockerignore   text eol=lf

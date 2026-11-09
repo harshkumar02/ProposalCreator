@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
+import { api } from '@/lib/api';
 import { Button, Input, Card } from '@/components/ui';
 import Link from 'next/link';
 
@@ -10,6 +11,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    api.getAuthConfig()
+      .then((config) => setRegistrationEnabled(config.registration_enabled))
+      .catch(() => setRegistrationEnabled(false));
+  }, []);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
@@ -64,12 +72,19 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Don't have an account?{' '}
-          <Link href="/register" className="text-primary-600 hover:underline font-medium">
-            Sign up
-          </Link>
-        </p>
+        {registrationEnabled === true && (
+          <p className="text-center text-sm text-gray-600 mt-4">
+            Don't have an account?{' '}
+            <Link href="/register" className="text-primary-600 hover:underline font-medium">
+              Sign up
+            </Link>
+          </p>
+        )}
+        {registrationEnabled === false && (
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Accounts are created by your administrator.
+          </p>
+        )}
       </Card>
     </div>
   );

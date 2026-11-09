@@ -1,11 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 
-from app.core.database import Base, engine, get_db
-from app.api import auth, rfps, proposals, templates, extraction, generation
+from app.core.config import settings
+from app.core.migrations import run_migrations
+from app.api import auth, rfps, proposals, templates, extraction, generation, proposal_types, blocks, workflows, clauses
 
-Base.metadata.create_all(bind=engine)
+if settings.AUTO_MIGRATE:
+    run_migrations()
 
 app = FastAPI(
     title="ProposalCreator API",
@@ -15,7 +16,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,9 +25,15 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(rfps.router, prefix="/api/rfps", tags=["rfps"])
 app.include_router(extraction.router, prefix="/api/rfps", tags=["extraction"])
+app.include_router(clauses.router, prefix="/api/rfps", tags=["clauses"])
 app.include_router(proposals.router, prefix="/api/proposals", tags=["proposals"])
 app.include_router(generation.router, prefix="/api/proposals", tags=["generation"])
 app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
+app.include_router(proposal_types.router, prefix="/api/proposal-types", tags=["proposal_types"])
+app.include_router(blocks.router, prefix="/api/blocks", tags=["blocks"])
+app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"])
+# Called by n8n only (shared-secret auth); keep off the public reverse proxy.
+app.include_router(workflows.internal_router, prefix="/internal", tags=["internal"])
 
 
 @app.get("/")

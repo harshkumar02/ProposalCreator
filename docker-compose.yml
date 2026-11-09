@@ -19,14 +19,37 @@ services:
       SECRET_KEY: ${SECRET_KEY:-supersecretkeychangeinproduction}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-claude}
+      N8N_WEBHOOK_BASE_URL: http://n8n:5678/webhook
+      N8N_SHARED_SECRET: ${N8N_SHARED_SECRET:-}
+      BACKEND_INTERNAL_URL: http://backend:8000
     ports:
       - "8000:8000"
     depends_on:
       - db
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.46.7
+    environment:
+      GENERIC_TIMEZONE: Asia/Kolkata
+      TZ: Asia/Kolkata
+      WEBHOOK_URL: http://localhost:5678/
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_SECURE_COOKIE: "false"   # local http only; remove behind HTTPS
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/workflows:ro
+    depends_on:
+      - backend
+
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: build   # the production image has no dev server; see deploy/ for production
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
     ports:
@@ -37,3 +60,4 @@ services:
 
 volumes:
   postgres_data:
+  n8n_data:
